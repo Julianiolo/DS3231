@@ -168,17 +168,25 @@ bool isleapYear(const uint16_t y) {
   return (y % 100 || y % 400 == 0);
 }
 
-DateTime RTClib::now(TwoWire & _Wire) {
+DateTime RTClib::now(TwoWire & _Wire, uint8_t* error) {
   _Wire.beginTransmission(CLOCK_ADDRESS);
   _Wire.write(0);	// This is the first register address (Seconds)
   			// We'll read from here on for 7 bytes: secs reg, minutes reg, hours, days, months and years.
-  _Wire.endTransmission();
+  uint8_t res = _Wire.endTransmission();
+  if(res != 0) {
+	if(error != NULL) *error = res;
+	return DateTime();
+  }
 
-  _Wire.requestFrom(CLOCK_ADDRESS, 7);
+
+  uint8_t got = _Wire.requestFrom(CLOCK_ADDRESS, 7);
+  if(got < 7 && error != NULL) *error = 10;
+
+  if(_Wire.available() < 7 && error != NULL) *error = 11;
   uint16_t ss = bcd2bin(_Wire.read() & 0x7F);
   uint16_t mm = bcd2bin(_Wire.read());
   uint16_t hh = bcd2bin(_Wire.read());
-  _Wire.read();
+  _Wire.read();  // DoW?
   uint16_t d = bcd2bin(_Wire.read());
   uint16_t m = bcd2bin(_Wire.read());
   uint16_t y = bcd2bin(_Wire.read()) + 2000;

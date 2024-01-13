@@ -61,7 +61,7 @@ bool isleapYear(const uint16_t);
 class RTClib {
   public:
 		// Get date and time snapshot
-    static DateTime now(TwoWire & _Wire = Wire);
+    static DateTime now(TwoWire & _Wire = Wire, uint8_t* error = NULL);
 };
 
 // Eric's original code is everything below this line
